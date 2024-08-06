@@ -1,11 +1,11 @@
 // src/websocket-server.ts
 import WebSocket, { WebSocketServer } from "ws";
 import { v4 as uuidv4 } from "uuid";
+import url from "url";
 import http from "http";
 import { debuglog } from "util";
 
 // type Games = {
-//   userId: string;
 //   gameId: string;
 //   status: "RUNNING" | "PENDING";
 // };
@@ -13,10 +13,22 @@ import { debuglog } from "util";
 const server = http.createServer();
 const wss = new WebSocketServer({ server });
 
-// const games: Games = {};
+const waitingRooms = {};
 
-wss.on("connection", (ws) => {
-  console.log("new connection was created");
+const gameRooms = {};
+
+wss.on("connection", (ws, req) => {
+  const reqUrl = req.url ? url.parse(req.url, true) : { query: {} as any };
+  const userId = (reqUrl.query as { userId?: string }).userId;
+
+  console.log(userId);
+  if (userId) {
+    waitingRooms.
+  } else {
+    console.log("connet drop");
+    ws.close(); // Close the connection if user ID is not provided
+    return;
+  }
 
   ws.on("message", (message) => {
     console.log(JSON.parse(message.toString()));
@@ -25,6 +37,7 @@ wss.on("connection", (ws) => {
 
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
+        console.log("ddd", client.readyState, client.CLOSED);
         client.send(JSON.stringify(data));
       }
     });
