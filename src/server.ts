@@ -13,21 +13,25 @@ import { debuglog } from "util";
 const server = http.createServer();
 const wss = new WebSocketServer({ server });
 
-const waitingRooms = {};
+const waitingQuees: any = [];
 
-const gameRooms = {};
+const gameQuees = [];
 
 wss.on("connection", (ws, req) => {
   const reqUrl = req.url ? url.parse(req.url, true) : { query: {} as any };
-  const userId = (reqUrl.query as { userId?: string }).userId;
+  const { userId, gameMode } = reqUrl.query;
 
   console.log(userId);
+  // adding user to gamequees
   if (userId) {
-    waitingRooms.
+    waitingQuees.push({
+      userId,
+      ws,
+    });
+    console.log(waitingQuees);
   } else {
-    console.log("connet drop");
-    ws.close(); // Close the connection if user ID is not provided
-    return;
+    ws.close();
+    console.log("lost connectiob");
   }
 
   ws.on("message", (message) => {
@@ -46,8 +50,6 @@ wss.on("connection", (ws, req) => {
   ws.on("close", () => {
     console.log("Client disconnected");
   });
-
-  ws.send("connection established");
 });
 
 // interface Client extends WebSocket {
