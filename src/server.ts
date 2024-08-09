@@ -10,6 +10,14 @@ import { debuglog } from "util";
 //   status: "RUNNING" | "PENDING";
 // };
 
+function tryMatchPlayer() {
+  console.log("add matching function");
+  if (gameQuees.length >= 2) {
+    const player1 = waitingQuees.shift();
+    const player2 = waitingQuees.shift();
+  }
+}
+
 const server = http.createServer();
 const wss = new WebSocketServer({ server });
 
@@ -28,6 +36,7 @@ wss.on("connection", (ws, req) => {
       userId,
       ws,
     });
+    tryMatchPlayer();
     console.log(waitingQuees);
   } else {
     ws.close();
