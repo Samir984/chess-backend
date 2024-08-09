@@ -1,0 +1,17 @@
+TAKEN SCENARIO: I am imagining 500 to 1000 visiter come to my site daily
+
+Problem:
+- How to match two user to start gameplay in optimized way?
+- How to continuouly try to match two player in case player number is sufficient at that period and try again and again?
+- How to decide and implemented which will get what side?
+- Should i maintain game state state for each user on server also?
+- How to handle connection lost problem, if one of lost connetion while game is going?
+-
+
+
+Handling random user palying game :
+-let make a waitingquee to push each player when they connected to websocker
+- Then if quee contain yetLeast two user we join them ,if no we add timer logic to check continuouly for matching them from 1 min max ,if fail will send terminate then websocket connetion.
+- For MatchPlayer i will  send the data in joinquee which contain  gameid and then send them gameid to client
+- On each message we check send paramter and communicated them based on there gameid
+

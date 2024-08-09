@@ -5,36 +5,70 @@ import url from "url";
 import http from "http";
 import { debuglog } from "util";
 
-// type Games = {
-//   gameId: string;
-//   status: "RUNNING" | "PENDING";
-// };
+type waitingQueestype = {
+  userId: string;
+  ws: WebSocket;
+  side: string;
+  opponentDetail: {
+    name: string;
+    image: string;
+  };
+};
 
 function tryMatchPlayer() {
   console.log("add matching function");
-  if (gameQuees.length >= 2) {
-    const player1 = waitingQuees.shift();
-    const player2 = waitingQuees.shift();
+  if (waitingQuees.length >= 2) {
+    //on match
+    const player1 = waitingQuees.shift() as waitingQueestype;
+    const player2 = waitingQuees.shift() as waitingQueestype;
+    GameStart(player1, player2);
   }
+}
+
+function GameStart(p1: waitingQueestype, p2: waitingQueestype) {
+  console.log("inside game start");
+  gameQuees.set(uuidv4(), {
+    status: "good",
+    p1,
+    p2,
+  });
+  p1.ws.send(
+    JSON.stringify({
+      type: "joined",
+      side: p1.side,
+      opponentId: p2.opponentDetail,
+    })
+  );
+  p2.ws.send(
+    JSON.stringify({
+      type: "joined",
+      side: p2.side,
+      opponentId: p1.opponentDetail,
+    })
+  );
 }
 
 const server = http.createServer();
 const wss = new WebSocketServer({ server });
 
-const waitingQuees: any = [];
+const waitingQuees: waitingQueestype[] = [];
 
-const gameQuees = [];
+const gameQuees = new Map();
 
 wss.on("connection", (ws, req) => {
   const reqUrl = req.url ? url.parse(req.url, true) : { query: {} as any };
-  const { userId, gameMode } = reqUrl.query;
+  const { userId, name, image } = reqUrl.query;
 
-  console.log(userId);
   // adding user to gamequees
   if (userId) {
     waitingQuees.push({
       userId,
+      side: waitingQuees.length % 2 == 0 ? "W" : "B",
       ws,
+      opponentDetail: {
+        name,
+        image,
+      },
     });
     tryMatchPlayer();
     console.log(waitingQuees);
