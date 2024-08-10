@@ -1,10 +1,9 @@
 import WebSocket, { WebSocketServer } from "ws";
+import server from "../server";
 import { v4 as uuidv4 } from "uuid";
 import url from "url";
-import http from "http";
 
-// Create an HTTP server and WebSocket server
-const server = http.createServer();
+console.log("chess socket");
 const wss = new WebSocketServer({ server });
 // Define types for player and game queue
 type WaitingQueueType = {
@@ -31,18 +30,17 @@ const gameQueue = new Map<string, GameQueueType>();
 const handleMatchNotFound = () => {
   console.log("Handling match not found");
   const intervalId = setInterval(() => {
-    console.log("Interval running", waitingQueue.length);
+    console.log("Interval running");
     tryMatchPlayer("intervalMatcher", intervalId);
   }, 1000);
 
   setTimeout(() => {
-    if (waitingQueue.length > 0) {
-      clearInterval(intervalId);
-      console.log("Interval cleared");
-      const singlePlayer = waitingQueue.shift() as WaitingQueueType;
-      console.log(`Waiting queue length: ${waitingQueue.length}`);
-      singlePlayer.ws.close();
-    }
+    clearInterval(intervalId);
+    console.log("Interval cleared");
+
+    const singlePlayer = waitingQueue.shift() as WaitingQueueType;
+    console.log(`Waiting queue length: ${waitingQueue.length}`);
+    singlePlayer.ws.close();
   }, 20000);
 };
 
@@ -56,9 +54,7 @@ const tryMatchPlayer = (
     const player1 = waitingQueue.shift() as WaitingQueueType;
     const player2 = waitingQueue.shift() as WaitingQueueType;
 
-    console.log(type, intervalId);
-    if (type === "intervalMatcher") {
-      console.log("killing interval");
+    if (type === "intervalMatcher" && intervalId) {
       clearInterval(intervalId);
     }
 
@@ -82,7 +78,7 @@ const startGame = (p1: WaitingQueueType, p2: WaitingQueueType) => {
       type: "joined",
       gameId,
       side: p1.side,
-      opponent: p2.opponentDetail,
+      opponentId: p2.opponentDetail,
     })
   );
 
@@ -91,7 +87,7 @@ const startGame = (p1: WaitingQueueType, p2: WaitingQueueType) => {
       type: "joined",
       gameId,
       side: p2.side,
-      opponent: p1.opponentDetail,
+      opponentId: p1.opponentDetail,
     })
   );
 };
@@ -128,12 +124,7 @@ wss.on("connection", (ws, req) => {
     });
   });
 
-  ws.on("close", (event) => {
-    console.log("WebSocket connection closed:", event);
+  ws.on("close", () => {
+    console.log("Client disconnected");
   });
-});
-
-// Start the HTTP server
-server.listen(8080, () => {
-  console.log("WebSocket server is running on ws://localhost:8080");
 });
