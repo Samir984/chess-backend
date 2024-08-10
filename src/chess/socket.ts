@@ -1,6 +1,10 @@
 import { WebSocket, WebSocketServer } from "ws";
 import url from "url";
-import { waitingQueueForRM } from "./gameQueue";
+import {
+  queueWorker,
+  queueWorkerRunning,
+  waitingQueueForRM,
+} from "./gameQueue";
 
 export const setupWebSocketServer = (wss: WebSocketServer) => {
   wss.on("connection", (ws: WebSocket, req) => {
@@ -15,6 +19,10 @@ export const setupWebSocketServer = (wss: WebSocketServer) => {
         createdAt: new Date(),
         opponentDetail: { name: name as string, image: image as string },
       });
+
+      if (waitingQueueForRM.length === 1 && !queueWorkerRunning) {
+        queueWorker(1000);
+      }
 
       console.log(waitingQueueForRM);
     } else if (userId && mode === "F") {

@@ -2,9 +2,11 @@ import { v4 as uuidv4 } from "uuid";
 import { GameQueueType, WaitingQueueForRMType } from "../types/types";
 
 export const waitingQueueForRM: WaitingQueueForRMType[] = [];
+
 export const gameQueue = new Map<string, GameQueueType>();
 
-let queueInterval: NodeJS.Timeout;
+export let queueInterval: NodeJS.Timeout;
+export let queueWorkerRunning: boolean;
 
 export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
   console.log("Trying to match player");
@@ -15,6 +17,7 @@ export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
     if (player1.userId === player2.userId) return;
     startGame(player1, player2);
   } else if (type === "knock") {
+    // removing player after timeout
     const player = waitingQueueForRM[0];
     if (player) {
       const timeOut =
@@ -33,6 +36,7 @@ export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
   }
 };
 
+//  called on server start
 export function queueWorker(intervalTime: number) {
   console.log(
     "queueWorker running",
@@ -41,11 +45,13 @@ export function queueWorker(intervalTime: number) {
     "intervalTime->",
     intervalTime
   );
+  queueWorkerRunning = true;
   queueInterval = setInterval(() => {
     tryMatchPlayer("knock-knock");
   }, intervalTime);
 }
 
+//  called on server start
 export function wakeTheQueueManipulator() {
   console.log("wakeTheQueueManipulator wake up");
 
@@ -56,12 +62,18 @@ export function wakeTheQueueManipulator() {
     if (waitingQueueForRM.length > 0) {
       tryMatchPlayer("knock");
     }
-    const newQueueWorkerInterval = Math.max(
-      1000 - waitingQueueForRM.length * 10,
-      100
-    ); // Ensure intervalTime is not less than 100ms
+
+    const newQueueWorkerInterval = 1000 - waitingQueueForRM.length * 10;
+    if (waitingQueueForRM.length === 0) {
+      console.log(
+        "steo queue worker when waitingQueueForRM",
+        waitingQueueForRM.length
+      );
+      queueWorkerRunning = false;
+      return;
+    }
     queueWorker(newQueueWorkerInterval);
-  }, 10000);
+  }, 5000);
 }
 
 export const startGame = (
