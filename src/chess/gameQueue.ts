@@ -66,7 +66,7 @@ export function wakeTheQueueManipulator() {
     const newQueueWorkerInterval = 1000 - waitingQueueForRM.length * 10;
     if (waitingQueueForRM.length === 0) {
       console.log(
-        "steo queue worker when waitingQueueForRM",
+        "stepping queue worker when waitingQueueForRM",
         waitingQueueForRM.length
       );
       queueWorkerRunning = false;

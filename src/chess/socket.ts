@@ -33,16 +33,9 @@ export const setupWebSocketServer = (wss: WebSocketServer) => {
     }
 
     ws.on("message", (message) => {
-      const messageString =
-        typeof message === "string" ? message : message.toString();
+      const messageString = message.toString();
       const { type, data } = JSON.parse(messageString);
       console.log(type, data);
-
-      wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ type, data }));
-        }
-      });
     });
 
     ws.on("close", (event: CloseEvent) => {
