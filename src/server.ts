@@ -2,7 +2,7 @@ import WebSocket, { WebSocketServer } from "ws";
 import {
   queueWorker,
   wakeTheQueueManipulator,
-} from "./chess/waitingQueueWatcher";
+} from "./chess/continuousMatching";
 import { v4 as uuidv4 } from "uuid";
 import url from "url";
 import http from "http";
@@ -15,6 +15,7 @@ const wss = new WebSocketServer({ server });
 export type waitingQueueForRMType = {
   userId: string;
   ws: WebSocket;
+  createdAt: Date;
   side: string;
   opponentDetail: {
     name: string;
@@ -33,13 +34,32 @@ export const waitingQueueForRM: waitingQueueForRMType[] = [];
 
 export const gameQueue = new Map<string, GameQueueType>();
 
-export const tryMatchPlayer = () => {
+export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
   console.log("Trying to match player");
 
   if (waitingQueueForRM.length >= 2) {
     const player1 = waitingQueueForRM.shift() as waitingQueueForRMType;
     const player2 = waitingQueueForRM.shift() as waitingQueueForRMType;
+    // prevent same user to join each other
+
+    if (player1.userId === player2.userId) return;
     startGame(player1, player2);
+  } else if (type === "knock") {
+    const player = waitingQueueForRM[0];
+    const timeOut =
+      new Date().getSeconds() - player.createdAt.getSeconds() > 20
+        ? true
+        : false;
+
+    console.log(
+      "knock",
+      new Date().getSeconds() - player.createdAt.getSeconds(),
+      new Date().getSeconds() - player.createdAt.getSeconds() > 20
+    );
+    if (!timeOut) return;
+    const timeOutPlayer = waitingQueueForRM.shift() as waitingQueueForRMType;
+    console.log("deletePlayer", waitingQueueForRM);
+    player.ws.close();
   }
 };
 
@@ -81,6 +101,7 @@ wss.on("connection", (ws, req) => {
       userId,
       side: waitingQueueForRM.length % 2 === 0 ? "W" : "B",
       ws,
+      createdAt: new Date(),
       opponentDetail: { name, image },
     });
 
