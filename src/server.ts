@@ -1,4 +1,8 @@
 import WebSocket, { WebSocketServer } from "ws";
+import {
+  queueWorker,
+  wakeTheQueueManipulator,
+} from "./chess/waitingQueueWatcher";
 import { v4 as uuidv4 } from "uuid";
 import url from "url";
 import http from "http";
@@ -6,8 +10,9 @@ import http from "http";
 // Create an HTTP server and WebSocket server
 const server = http.createServer();
 const wss = new WebSocketServer({ server });
+
 // Define types for player and game queue
-type WaitingQueueType = {
+export type waitingQueueForRMType = {
   userId: string;
   ws: WebSocket;
   side: string;
@@ -17,58 +22,28 @@ type WaitingQueueType = {
   };
 };
 
-type GameQueueType = {
+export type GameQueueType = {
   status: string;
-  p1: WaitingQueueType;
-  p2: WaitingQueueType;
+  p1: waitingQueueForRMType;
+  p2: waitingQueueForRMType;
 };
 
 // Initialize game queues and waiting queues
-const waitingQueue: WaitingQueueType[] = [];
-const gameQueue = new Map<string, GameQueueType>();
+export const waitingQueueForRM: waitingQueueForRMType[] = [];
 
-// Handle player matching and game start
-const handleMatchNotFound = () => {
-  console.log("Handling match not found");
-  const intervalId = setInterval(() => {
-    console.log("Interval running", waitingQueue.length);
-    tryMatchPlayer("intervalMatcher", intervalId);
-  }, 1000);
+export const gameQueue = new Map<string, GameQueueType>();
 
-  setTimeout(() => {
-    if (waitingQueue.length > 0) {
-      clearInterval(intervalId);
-      console.log("Interval cleared");
-      const singlePlayer = waitingQueue.shift() as WaitingQueueType;
-      console.log(`Waiting queue length: ${waitingQueue.length}`);
-      singlePlayer.ws.close();
-    }
-  }, 20000);
-};
-
-const tryMatchPlayer = (
-  type: "firstTry" | "intervalMatcher",
-  intervalId?: NodeJS.Timeout
-) => {
+export const tryMatchPlayer = () => {
   console.log("Trying to match player");
 
-  if (waitingQueue.length >= 2) {
-    const player1 = waitingQueue.shift() as WaitingQueueType;
-    const player2 = waitingQueue.shift() as WaitingQueueType;
-
-    console.log(type, intervalId);
-    if (type === "intervalMatcher") {
-      console.log("killing interval");
-      clearInterval(intervalId);
-    }
-
+  if (waitingQueueForRM.length >= 2) {
+    const player1 = waitingQueueForRM.shift() as waitingQueueForRMType;
+    const player2 = waitingQueueForRM.shift() as waitingQueueForRMType;
     startGame(player1, player2);
-  } else if (type === "firstTry") {
-    handleMatchNotFound();
   }
 };
 
-const startGame = (p1: WaitingQueueType, p2: WaitingQueueType) => {
+const startGame = (p1: waitingQueueForRMType, p2: waitingQueueForRMType) => {
   console.log("Starting game");
   const gameId = uuidv4();
   gameQueue.set(gameId, {
@@ -102,15 +77,14 @@ wss.on("connection", (ws, req) => {
   const { userId, name, image, mode } = reqUrl.query;
 
   if (userId && mode === "R") {
-    waitingQueue.push({
+    waitingQueueForRM.push({
       userId,
-      side: waitingQueue.length % 2 === 0 ? "W" : "B",
+      side: waitingQueueForRM.length % 2 === 0 ? "W" : "B",
       ws,
       opponentDetail: { name, image },
     });
 
-    tryMatchPlayer("firstTry");
-    console.log(waitingQueue);
+    console.log(waitingQueueForRM);
   } else if (userId && mode === "F") {
   } else {
     ws.close();
@@ -135,5 +109,7 @@ wss.on("connection", (ws, req) => {
 
 // Start the HTTP server
 server.listen(8080, () => {
+  wakeTheQueueManipulator();
+  queueWorker(1000);
   console.log("WebSocket server is running on ws://localhost:8080");
 });
