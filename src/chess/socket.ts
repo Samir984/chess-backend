@@ -1,10 +1,12 @@
 import { WebSocket, WebSocketServer } from "ws";
 import url from "url";
 import {
+  gameQueue,
   queueWorker,
   queueWorkerRunning,
   waitingQueueForRM,
 } from "./gameQueue";
+import { GameQueueType } from "../types/types";
 
 export const setupWebSocketServer = (wss: WebSocketServer) => {
   wss.on("connection", (ws: WebSocket, req) => {
@@ -33,9 +35,21 @@ export const setupWebSocketServer = (wss: WebSocketServer) => {
     }
 
     ws.on("message", (message) => {
-      const messageString = message.toString();
-      const { type, data } = JSON.parse(messageString);
-      console.log(type, data);
+      console.log("message");
+      const messageString = JSON.parse(message.toString());
+
+      const { type, data } = messageString;
+      console.log(type, data.gameId);
+      const clients = gameQueue.get(data.gameId);
+
+      switch (type) {
+        case "move":
+          communicatedThen(clients as GameQueueType, data);
+          break;
+
+        case "gameOver":
+          break;
+      }
     });
 
     ws.on("close", (event: CloseEvent) => {
@@ -43,3 +57,14 @@ export const setupWebSocketServer = (wss: WebSocketServer) => {
     });
   });
 };
+
+function communicatedThen(clients: GameQueueType, data: any) {
+  if (clients.p1.ws.readyState === 1 && clients.p2.ws.readyState === 1) {
+    const parsedJsonMessage = JSON.stringify({
+      type: "move",
+      move: data.move,
+    });
+    clients.p1.ws.send(parsedJsonMessage);
+    clients.p2.ws.send(parsedJsonMessage);
+  }
+}

@@ -21,10 +21,10 @@ export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
     const player = waitingQueueForRM[0];
     if (player) {
       const timeOut =
-        new Date().getSeconds() - player.createdAt.getSeconds() > 20;
+        (new Date().getTime() - player.createdAt.getTime()) / 1000 > 20;
       console.log(
         "knock",
-        new Date().getSeconds() - player.createdAt.getSeconds(),
+        new Date().getTime() - player.createdAt.getTime(),
         timeOut
       );
       if (!timeOut) return;
