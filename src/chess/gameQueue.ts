@@ -14,7 +14,12 @@ export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
   if (waitingQueueForRM.length >= 2) {
     const player1 = waitingQueueForRM.shift()!;
     const player2 = waitingQueueForRM.shift()!;
-    if (player1.userId === player2.userId) return;
+    //prevenation checked as waitingQueue may missed to clean
+    if (
+      player1.userId === player2.userId ||
+      player1.ws.readyState !== player2.ws.readyState
+    )
+      return;
     startGame(player1, player2);
   } else if (type === "knock") {
     // removing player after timeout
@@ -39,11 +44,10 @@ export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
 //  called on server start
 export function queueWorker(intervalTime: number) {
   console.log(
-    "queueWorker running",
     "waitingQueueForRMLength -> ",
     waitingQueueForRM.length,
-    "intervalTime->",
-    intervalTime
+    "gameQueue lenth->",
+    gameQueue.size
   );
   queueWorkerRunning = true;
   queueInterval = setInterval(() => {
@@ -66,8 +70,10 @@ export function wakeTheQueueManipulator() {
     const newQueueWorkerInterval = 1000 - waitingQueueForRM.length * 10;
     if (waitingQueueForRM.length === 0) {
       console.log(
-        "stepping queue worker when waitingQueueForRM",
-        waitingQueueForRM.length
+        "waitingQueue: ",
+        waitingQueueForRM.length,
+        "GameQUeue : ",
+        gameQueue.size
       );
       queueWorkerRunning = false;
       return;

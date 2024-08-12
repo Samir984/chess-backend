@@ -25,8 +25,6 @@ export const setupWebSocketServer = (wss: WebSocketServer) => {
       if (waitingQueueForRM.length === 1 && !queueWorkerRunning) {
         queueWorker(1000);
       }
-
-      console.log(waitingQueueForRM);
     } else if (userId && mode === "F") {
       // Handle mode F if necessary
     } else {
@@ -35,12 +33,11 @@ export const setupWebSocketServer = (wss: WebSocketServer) => {
     }
 
     ws.on("message", (message) => {
-      console.log("message");
       const messageString = JSON.parse(message.toString());
-
       const { type, data } = messageString;
       const gameId = data.gameId;
       const clients = gameQueue.get(gameId);
+      console.log(type);
 
       switch (type) {
         case "move":
@@ -50,16 +47,18 @@ export const setupWebSocketServer = (wss: WebSocketServer) => {
         case "gameOver":
           setTimeout(
             () =>
-              handelTermination(
+              handelGameOver(
                 gameId,
                 clients?.p1 as WaitingQueueForRMType,
                 clients?.p2 as WaitingQueueForRMType
               ),
-            1000
+            3000
           );
           break;
 
-        case "quiet":
+        case "quit":
+          handelQuit(clients as GameQueueType, data, gameId);
+
           break;
       }
     });
@@ -72,7 +71,10 @@ export const setupWebSocketServer = (wss: WebSocketServer) => {
 
 function communicatedThen(clients: GameQueueType, data: any, gameId: string) {
   const { p1, p2 } = clients;
-  if (p1.ws.readyState === 1 && p2.ws.readyState === 1) {
+  if (
+    p1.ws.readyState === WebSocket.OPEN &&
+    p2.ws.readyState === WebSocket.OPEN
+  ) {
     const parsedJsonMessage = JSON.stringify({
       type: "move",
       move: data.move,
@@ -86,18 +88,52 @@ function communicatedThen(clients: GameQueueType, data: any, gameId: string) {
       clients.p2.ws.send(parsedJsonMessage);
     }
   } else {
-    handelTermination(gameId, p1, p2);
+    handelGameOver(gameId, p1, p2);
   }
 }
 
-//handel termination
-function handelTermination(
+// Handle termination
+
+function handelQuit(clients: GameQueueType, data: any, gameId: string) {
+  console.log("quit handelr running");
+  const { p1, p2 } = clients;
+  const quiter = data.quiter;
+  const parsedMessage = JSON.stringify({
+    type: "quit",
+    quiter,
+    message: "your oppoent quite the game",
+  });
+
+  console.log("player who quite: ", quiter);
+  if (p1.side === quiter) {
+    p1.ws.send(parsedMessage);
+  } else {
+    p2.ws.send(parsedMessage);
+  }
+  gameQueue.delete(gameId);
+  p1.ws.close();
+  p2.ws.close();
+}
+
+function handelGameOver(
   gameId: string,
   p1: WaitingQueueForRMType,
   p2: WaitingQueueForRMType
 ) {
   console.log("termination function call");
   gameQueue.delete(gameId);
+  p1.ws.send(
+    JSON.stringify({
+      type: "close",
+      message: "Game terminated",
+    })
+  );
+  p2.ws.send(
+    JSON.stringify({
+      type: "close",
+      message: "Game terminated",
+    })
+  );
   p1.ws.close();
   p2.ws.close();
 }
