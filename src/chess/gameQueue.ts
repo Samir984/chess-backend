@@ -111,3 +111,71 @@ export const startGame = (
     })
   );
 };
+
+function communicatedThen(clients: GameQueueType, data: any, gameId: string) {
+  const { p1, p2 } = clients;
+  if (
+    p1.ws.readyState === WebSocket.OPEN &&
+    p2.ws.readyState === WebSocket.OPEN
+  ) {
+    const parsedJsonMessage = JSON.stringify({
+      type: "move",
+      move: data.move,
+    });
+
+    if (p1.side === "W" && data.nextTurn === "W") {
+      console.log("send to W");
+      clients.p1.ws.send(parsedJsonMessage);
+    } else {
+      console.log("send to B");
+      clients.p2.ws.send(parsedJsonMessage);
+    }
+  } else {
+    handleGameOver(gameId, p1, p2);
+  }
+}
+
+// Handle player quitting
+function handleQuit(clients: GameQueueType, data: any, gameId: string) {
+  const { p1, p2 } = clients;
+  const quitter = data.quitter;
+
+  const quitMessage = JSON.stringify({
+    type: "quit",
+    quitter,
+    message: "Your opponent quit the game",
+  });
+
+  if (p1.side === quitter) {
+    p1.ws.send(quitMessage);
+  } else {
+    p2.ws.send(quitMessage);
+  }
+
+  // Clean up
+  gameQueue.delete(gameId);
+  p1.ws.close();
+  p2.ws.close();
+}
+
+// Handle game over scenario
+function handleGameOver(
+  gameId: string,
+  p1: WaitingQueueForRMType,
+  p2: WaitingQueueForRMType
+) {
+  console.log("handleGameOver function call");
+
+  const gameOverMessage = JSON.stringify({
+    type: "close",
+    message: "Game terminated",
+  });
+
+  p1.ws.send(gameOverMessage);
+  p2.ws.send(gameOverMessage);
+
+  // Clean up
+  gameQueue.delete(gameId);
+  p1.ws.close();
+  p2.ws.close();
+}
