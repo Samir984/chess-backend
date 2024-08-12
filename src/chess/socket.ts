@@ -47,7 +47,7 @@ export const setupWebSocketServer = (wss: WebSocketServer) => {
         case "gameOver":
           setTimeout(
             () =>
-              handelGameOver(
+              handleGameOver(
                 gameId,
                 clients?.p1 as WaitingQueueForRMType,
                 clients?.p2 as WaitingQueueForRMType
@@ -57,8 +57,7 @@ export const setupWebSocketServer = (wss: WebSocketServer) => {
           break;
 
         case "quit":
-          handelQuit(clients as GameQueueType, data, gameId);
-
+          handleQuit(clients as GameQueueType, data, gameId);
           break;
       }
     });
@@ -88,52 +87,51 @@ function communicatedThen(clients: GameQueueType, data: any, gameId: string) {
       clients.p2.ws.send(parsedJsonMessage);
     }
   } else {
-    handelGameOver(gameId, p1, p2);
+    handleGameOver(gameId, p1, p2);
   }
 }
 
-// Handle termination
-
-function handelQuit(clients: GameQueueType, data: any, gameId: string) {
-  console.log("quit handelr running");
+// Handle player quitting
+function handleQuit(clients: GameQueueType, data: any, gameId: string) {
   const { p1, p2 } = clients;
-  const quiter = data.quiter;
-  const parsedMessage = JSON.stringify({
+  const quitter = data.quitter;
+
+  const quitMessage = JSON.stringify({
     type: "quit",
-    quiter,
-    message: "your oppoent quite the game",
+    quitter,
+    message: "Your opponent quit the game",
   });
 
-  console.log("player who quite: ", quiter);
-  if (p1.side === quiter) {
-    p1.ws.send(parsedMessage);
+  if (p1.side === quitter) {
+    p1.ws.send(quitMessage);
   } else {
-    p2.ws.send(parsedMessage);
+    p2.ws.send(quitMessage);
   }
+
+  // Clean up
   gameQueue.delete(gameId);
   p1.ws.close();
   p2.ws.close();
 }
 
-function handelGameOver(
+// Handle game over scenario
+function handleGameOver(
   gameId: string,
   p1: WaitingQueueForRMType,
   p2: WaitingQueueForRMType
 ) {
-  console.log("termination function call");
+  console.log("handleGameOver function call");
+
+  const gameOverMessage = JSON.stringify({
+    type: "close",
+    message: "Game terminated",
+  });
+
+  p1.ws.send(gameOverMessage);
+  p2.ws.send(gameOverMessage);
+
+  // Clean up
   gameQueue.delete(gameId);
-  p1.ws.send(
-    JSON.stringify({
-      type: "close",
-      message: "Game terminated",
-    })
-  );
-  p2.ws.send(
-    JSON.stringify({
-      type: "close",
-      message: "Game terminated",
-    })
-  );
   p1.ws.close();
   p2.ws.close();
 }
