@@ -1,9 +1,10 @@
+// src/gameQueue.ts
 import { v4 as uuidv4 } from "uuid";
 import { GameQueueType, WaitingQueueForRMType } from "../types/types";
 
 export const waitingQueueForRM: WaitingQueueForRMType[] = [];
-
 export const gameQueue = new Map<string, GameQueueType>();
+export const waitingQueueForFM = new Map<string, WaitingQueueForRMType>();
 
 export let queueInterval: NodeJS.Timeout;
 export let queueWorkerRunning: boolean;
@@ -14,7 +15,7 @@ export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
   if (waitingQueueForRM.length >= 2) {
     const player1 = waitingQueueForRM.shift()!;
     const player2 = waitingQueueForRM.shift()!;
-    //prevenation checked as waitingQueue may missed to clean
+    // Prevention check as waitingQueue may missed to clean
     if (
       player1.userId === player2.userId ||
       player1.ws.readyState !== player2.ws.readyState
@@ -22,7 +23,7 @@ export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
       return;
     startGame(player1, player2);
   } else if (type === "knock") {
-    // removing player after timeout
+    // Removing player after timeout
     const player = waitingQueueForRM[0];
     if (player) {
       const timeOut =
@@ -41,12 +42,11 @@ export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
   }
 };
 
-//  called on server start
 export function queueWorker(intervalTime: number) {
   console.log(
     "waitingQueueForRMLength -> ",
     waitingQueueForRM.length,
-    "gameQueue lenth->",
+    "gameQueue length->",
     gameQueue.size
   );
   queueWorkerRunning = true;
@@ -55,7 +55,6 @@ export function queueWorker(intervalTime: number) {
   }, intervalTime);
 }
 
-//  called on server start
 export function wakeTheQueueManipulator() {
   console.log("wakeTheQueueManipulator wake up");
 
@@ -72,7 +71,7 @@ export function wakeTheQueueManipulator() {
       console.log(
         "waitingQueue: ",
         waitingQueueForRM.length,
-        "GameQUeue : ",
+        "GameQueue : ",
         gameQueue.size
       );
       queueWorkerRunning = false;
@@ -111,71 +110,3 @@ export const startGame = (
     })
   );
 };
-
-function communicatedThen(clients: GameQueueType, data: any, gameId: string) {
-  const { p1, p2 } = clients;
-  if (
-    p1.ws.readyState === WebSocket.OPEN &&
-    p2.ws.readyState === WebSocket.OPEN
-  ) {
-    const parsedJsonMessage = JSON.stringify({
-      type: "move",
-      move: data.move,
-    });
-
-    if (p1.side === "W" && data.nextTurn === "W") {
-      console.log("send to W");
-      clients.p1.ws.send(parsedJsonMessage);
-    } else {
-      console.log("send to B");
-      clients.p2.ws.send(parsedJsonMessage);
-    }
-  } else {
-    handleGameOver(gameId, p1, p2);
-  }
-}
-
-// Handle player quitting
-function handleQuit(clients: GameQueueType, data: any, gameId: string) {
-  const { p1, p2 } = clients;
-  const quitter = data.quitter;
-
-  const quitMessage = JSON.stringify({
-    type: "quit",
-    quitter,
-    message: "Your opponent quit the game",
-  });
-
-  if (p1.side === quitter) {
-    p1.ws.send(quitMessage);
-  } else {
-    p2.ws.send(quitMessage);
-  }
-
-  // Clean up
-  gameQueue.delete(gameId);
-  p1.ws.close();
-  p2.ws.close();
-}
-
-// Handle game over scenario
-function handleGameOver(
-  gameId: string,
-  p1: WaitingQueueForRMType,
-  p2: WaitingQueueForRMType
-) {
-  console.log("handleGameOver function call");
-
-  const gameOverMessage = JSON.stringify({
-    type: "close",
-    message: "Game terminated",
-  });
-
-  p1.ws.send(gameOverMessage);
-  p2.ws.send(gameOverMessage);
-
-  // Clean up
-  gameQueue.delete(gameId);
-  p1.ws.close();
-  p2.ws.close();
-}

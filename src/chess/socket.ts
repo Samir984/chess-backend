@@ -1,11 +1,11 @@
 import { WebSocket, WebSocketServer } from "ws";
 
 import { messageHandler } from "./messageHandler";
-import { connetionHandel } from "./connectionHandler";
+import { connetionHandler } from "./connectionHandler";
 
 export const setupWebSocketServer = (wss: WebSocketServer) => {
   wss.on("connection", (ws: WebSocket, req) => {
-    connetionHandel(req, ws);
+    connetionHandler(req, ws);
 
     ws.on("message", (message) => messageHandler(message));
 

@@ -4,10 +4,10 @@ export type WaitingQueueForRMType = {
   userId: string;
   ws: WebSocket;
   createdAt: Date;
-  side: string;
+  side: "W" | "B";
   opponentDetail: {
     name: string;
-    image: string;
+    image: string | null;
   };
 };
 

@@ -1,13 +1,15 @@
+import { v4 as uuidv4 } from "uuid";
 import { IncomingMessage } from "http";
 import url from "url";
 import {
   queueWorker,
   queueWorkerRunning,
+  waitingQueueForFM,
   waitingQueueForRM,
 } from "./gameQueue";
 import { WebSocket } from "ws";
 
-export function connetionHandel(req: IncomingMessage, ws: WebSocket) {
+export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
   const reqUrl = req.url ? url.parse(req.url, true) : { query: {} as any };
   const { userId, name, image, mode } = reqUrl.query;
 
@@ -24,7 +26,14 @@ export function connetionHandel(req: IncomingMessage, ws: WebSocket) {
       queueWorker(1000);
     }
   } else if (userId && mode === "F") {
-    // Handle mode F if necessary
+    const gameId = uuidv4();
+    waitingQueueForFM.set(gameId, {
+      userId: userId as string,
+      side: "W",
+      ws,
+      createdAt: new Date(),
+      opponentDetail: { name: name as string, image: image as string },
+    });
   } else {
     ws.close();
     console.log("Lost connection");
