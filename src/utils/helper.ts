@@ -11,5 +11,5 @@ export function urlShortning(url: string): string | null {
 }
 
 export function addUnderscores(name: string): string {
-  return name.trim().replace(/\s+/g, "_").toLowerCase();
+  return name.trim().replace(/\s+/g, "_");
 }
