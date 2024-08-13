@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { gameQueue } from "./gameQueue";
+import { gameQueue, waitingQueueForFM, waitingQueueForRM } from "./gameQueue";
 import { GameQueueType, WaitingQueueForRMType } from "../types/types";
 
 export function messageHandler(message: WebSocket.RawData) {
@@ -26,9 +26,34 @@ export function messageHandler(message: WebSocket.RawData) {
       );
       break;
 
+    case "closeSocketBeforeJoin":
+      handleCloseSocketBeforeJoin(data);
+
+      break;
+
     case "quit":
       handleQuit(clients as GameQueueType, data, gameId);
       break;
+  }
+}
+
+function handleCloseSocketBeforeJoin(data: any) {
+  console.log("handleCloseSocketBeforeJoin function\n");
+  const { mode, gameId, userId } = data;
+  console.log(gameId, mode, userId);
+  if (mode === "F") {
+    waitingQueueForFM.delete(gameId);
+  } else {
+    const canPerformed = waitingQueueForRM.length < 500;
+    if (canPerformed) {
+      const updatedWaitingQueueForRM = waitingQueueForRM.filter(
+        (player) => player.userId !== userId
+      );
+      console.log(updatedWaitingQueueForRM);
+      waitingQueueForRM.splice(0, waitingQueueForRM.length);
+      waitingQueueForRM.push(...updatedWaitingQueueForRM);
+      console.log("\n\n\n\new waiting", waitingQueueForRM.length);
+    }
   }
 }
 
@@ -67,9 +92,9 @@ function handleQuit(clients: GameQueueType, data: any, gameId: string) {
   });
 
   if (p1.side === quitter) {
-    p1.ws.send(quitMessage);
-  } else {
     p2.ws.send(quitMessage);
+  } else {
+    p1.ws.send(quitMessage);
   }
 
   // Clean up

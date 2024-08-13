@@ -10,7 +10,7 @@ export const setupWebSocketServer = (wss: WebSocketServer) => {
     ws.on("message", (message) => messageHandler(message));
 
     ws.on("close", (code, reason) => {
-      console.log("WebSocket connection closed:", code, reason.toString());
+      console.log("WebSocket connection closed:", code, reason);
     });
   });
 };

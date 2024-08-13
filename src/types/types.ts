@@ -1,13 +1,14 @@
+// src/types/types.ts
 import { WebSocket } from "ws";
 
 export type WaitingQueueForRMType = {
   userId: string;
   ws: WebSocket;
   createdAt: Date;
-  side: "W" | "B";
+  side: string;
   opponentDetail: {
     name: string;
-    image: string | null;
+    image: string;
   };
 };
 

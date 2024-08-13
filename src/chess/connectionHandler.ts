@@ -34,6 +34,12 @@ export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
       createdAt: new Date(),
       opponentDetail: { name: name as string, image: image as string },
     });
+    ws.send(
+      JSON.stringify({
+        type: "joiningLink",
+        joiningLink: `?gameId=${gameId}&name=${name}&image=${image}`,
+      })
+    );
   } else {
     ws.close();
     console.log("Lost connection");

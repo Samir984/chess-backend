@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "build": "tsc",
+    "start": "node dist/server.js",
     "dev": "ts-node-dev src/server.ts",
     "build-and-start": "tsc && node dist/server.js",
     "lint": "eslint 'src/**/*.{ts,tsx}' --fix"

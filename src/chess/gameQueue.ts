@@ -42,19 +42,16 @@ export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
   }
 };
 
+// short intervel check fro matching users for new game from waitingQueueForRM
 export function queueWorker(intervalTime: number) {
-  console.log(
-    "waitingQueueForRMLength -> ",
-    waitingQueueForRM.length,
-    "gameQueue length->",
-    gameQueue.size
-  );
+  console.log("queue worker start");
   queueWorkerRunning = true;
   queueInterval = setInterval(() => {
     tryMatchPlayer("knock-knock");
   }, intervalTime);
 }
 
+// long interval  queue for time manipulation and checking timout in waitingQueueForRM
 export function wakeTheQueueManipulator() {
   console.log("wakeTheQueueManipulator wake up");
 
@@ -69,14 +66,17 @@ export function wakeTheQueueManipulator() {
     const newQueueWorkerInterval = 1000 - waitingQueueForRM.length * 10;
     if (waitingQueueForRM.length === 0) {
       console.log(
-        "waitingQueue: ",
+        "waitingQueueForRM Length -> ",
         waitingQueueForRM.length,
-        "GameQueue : ",
-        gameQueue.size
+        "gameQueue length->",
+        gameQueue.size,
+        "waitingQueueForFM Length ->",
+        waitingQueueForFM.size
       );
       queueWorkerRunning = false;
       return;
     }
+
     queueWorker(newQueueWorkerInterval);
   }, 5000);
 }
