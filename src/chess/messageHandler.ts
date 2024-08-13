@@ -38,9 +38,8 @@ export function messageHandler(message: WebSocket.RawData) {
 }
 
 function handleCloseSocketBeforeJoin(data: any) {
-  console.log("handleCloseSocketBeforeJoin function\n");
+  console.log("handleCloseSocketBeforeJoin function");
   const { mode, inviterId, userId } = data;
-  console.log(inviterId, mode, userId);
   if (mode === "F") {
     waitingQueueForFM.delete(inviterId);
   } else if (mode === "R") {
