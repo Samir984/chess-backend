@@ -7,7 +7,7 @@ export function messageHandler(message: WebSocket.RawData) {
   const { type, data } = messageString;
   const gameId = data.gameId;
   const clients = gameQueue.get(gameId);
-  console.log(type);
+  console.log(type, data);
 
   switch (type) {
     case "move":
@@ -39,11 +39,11 @@ export function messageHandler(message: WebSocket.RawData) {
 
 function handleCloseSocketBeforeJoin(data: any) {
   console.log("handleCloseSocketBeforeJoin function\n");
-  const { mode, gameId, userId } = data;
-  console.log(gameId, mode, userId);
+  const { mode, inviterId, userId } = data;
+  console.log(inviterId, mode, userId);
   if (mode === "F") {
-    waitingQueueForFM.delete(gameId);
-  } else {
+    waitingQueueForFM.delete(inviterId);
+  } else if (mode === "R") {
     const canPerformed = waitingQueueForRM.length < 500;
     if (canPerformed) {
       const updatedWaitingQueueForRM = waitingQueueForRM.filter(
@@ -52,7 +52,10 @@ function handleCloseSocketBeforeJoin(data: any) {
       console.log(updatedWaitingQueueForRM);
       waitingQueueForRM.splice(0, waitingQueueForRM.length);
       waitingQueueForRM.push(...updatedWaitingQueueForRM);
-      console.log("\n\n\n\new waiting", waitingQueueForRM.length);
+      console.log(
+        "\n\n\n\nnew waitingQueueForRM size: ",
+        waitingQueueForRM.length
+      );
     }
   }
 }

@@ -15,7 +15,7 @@ export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
   if (waitingQueueForRM.length >= 2) {
     const player1 = waitingQueueForRM.shift()!;
     const player2 = waitingQueueForRM.shift()!;
-    //double Prevention check before starting game
+    //prevention check : sometime waitingQueue make have stale value which connetion is not present in high traffic
     if (player1.ws.readyState !== player2.ws.readyState) return;
     startGame(player1, player2);
   } else if (type === "knock") {

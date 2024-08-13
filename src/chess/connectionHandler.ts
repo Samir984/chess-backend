@@ -12,7 +12,7 @@ import { WebSocket } from "ws";
 
 export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
   const reqUrl = req.url ? url.parse(req.url, true) : { query: {} as any };
-  const { userId, name, image, mode, gameId } = reqUrl.query;
+  const { userId, name, image, mode, inviterId } = reqUrl.query;
 
   if (userId && mode === "R") {
     waitingQueueForRM.push({
@@ -27,8 +27,7 @@ export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
       queueWorker(1000);
     }
   } else if (userId && mode === "F") {
-    const gameId = uuidv4();
-    waitingQueueForFM.set(gameId, {
+    waitingQueueForFM.set(userId, {
       userId: userId as string,
       side: "W",
       ws,
@@ -38,11 +37,12 @@ export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
     ws.send(
       JSON.stringify({
         type: "joiningLink",
-        joiningLink: `?gameId=${gameId}&inviterName=${name}&inviterImage=${image}`,
+        joiningLink: `?inviterId=${userId}&inviterName=${name}&inviterImage=${image}`,
       })
     );
-  } else if (userId && mode === "J" && gameId) {
-    const inviter = waitingQueueForFM.get(gameId);
+  } else if (userId && mode === "J" && inviterId) {
+    console.log("J mode", inviterId, userId);
+    const inviter = waitingQueueForFM.get(inviterId);
     console.log(inviter);
     if (!inviter) {
       ws.send(
@@ -61,7 +61,7 @@ export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
         createdAt: new Date(),
         opponentDetail: { name: name as string, image: image as string },
       };
-      waitingQueueForFM.delete(gameId);
+      waitingQueueForFM.delete(inviterId);
       startGame(inviter, invitee);
     }
   } else {

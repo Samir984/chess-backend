@@ -20,8 +20,6 @@ const wss = new WebSocketServer({ server });
 // Set up WebSocket server
 setupWebSocketServer(wss);
 
-
-
 // Start the server
 server.listen(8080, () => {
   wakeTheQueueManipulator();
