@@ -9,6 +9,7 @@ import {
   waitingQueueForRM,
 } from "./gameQueue";
 import { WebSocket } from "ws";
+import { addUnderscores, urlShortning } from "../utils/helper";
 
 export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
   const reqUrl = req.url ? url.parse(req.url, true) : { query: {} as any };
@@ -37,7 +38,9 @@ export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
     ws.send(
       JSON.stringify({
         type: "joiningLink",
-        joiningLink: `?inviterId=${userId}&inviterName=${name}&inviterImage=${image}`,
+        joiningLink: `?inviterId=${userId}&inviterName=${addUnderscores(
+          name
+        )}&inviterImage=${urlShortning(image)}`,
       })
     );
   } else if (userId && mode === "J" && inviterId) {
