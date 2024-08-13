@@ -15,12 +15,8 @@ export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
   if (waitingQueueForRM.length >= 2) {
     const player1 = waitingQueueForRM.shift()!;
     const player2 = waitingQueueForRM.shift()!;
-    // Prevention check as waitingQueue may missed to clean
-    if (
-      player1.userId === player2.userId ||
-      player1.ws.readyState !== player2.ws.readyState
-    )
-      return;
+    //double Prevention check before starting game
+    if (player1.ws.readyState !== player2.ws.readyState) return;
     startGame(player1, player2);
   } else if (type === "knock") {
     // Removing player after timeout

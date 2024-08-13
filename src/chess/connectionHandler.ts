@@ -4,6 +4,7 @@ import url from "url";
 import {
   queueWorker,
   queueWorkerRunning,
+  startGame,
   waitingQueueForFM,
   waitingQueueForRM,
 } from "./gameQueue";
@@ -11,7 +12,7 @@ import { WebSocket } from "ws";
 
 export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
   const reqUrl = req.url ? url.parse(req.url, true) : { query: {} as any };
-  const { userId, name, image, mode } = reqUrl.query;
+  const { userId, name, image, mode, gameId } = reqUrl.query;
 
   if (userId && mode === "R") {
     waitingQueueForRM.push({
@@ -37,9 +38,32 @@ export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
     ws.send(
       JSON.stringify({
         type: "joiningLink",
-        joiningLink: `?gameId=${gameId}&name=${name}&image=${image}`,
+        joiningLink: `?gameId=${gameId}&inviterName=${name}&inviterImage=${image}`,
       })
     );
+  } else if (userId && mode === "J" && gameId) {
+    const inviter = waitingQueueForFM.get(gameId);
+    console.log(inviter);
+    if (!inviter) {
+      ws.send(
+        JSON.stringify({
+          type: "expiredJoiningLink",
+          message: "connetion request was expired",
+        })
+      );
+      ws.close();
+      return;
+    } else {
+      const invitee = {
+        userId: userId as string,
+        side: "B",
+        ws,
+        createdAt: new Date(),
+        opponentDetail: { name: name as string, image: image as string },
+      };
+      waitingQueueForFM.delete(gameId);
+      startGame(inviter, invitee);
+    }
   } else {
     ws.close();
     console.log("Lost connection");
