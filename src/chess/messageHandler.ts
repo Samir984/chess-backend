@@ -52,7 +52,7 @@ function handleCloseSocketBeforeJoin(data: any) {
       waitingQueueForRM.splice(0, waitingQueueForRM.length);
       waitingQueueForRM.push(...updatedWaitingQueueForRM);
       console.log(
-        "\n\n\n\nnew waitingQueueForRM size: ",
+        "\n\n\n\n new waitingQueueForRM size: ",
         waitingQueueForRM.length
       );
     }
@@ -78,7 +78,7 @@ function communicatedThen(clients: GameQueueType, data: any, gameId: string) {
       clients.p2.ws.send(parsedJsonMessage);
     }
   } else {
-    handleGameOver(gameId, p1, p2);
+    handleTermination(gameId, p1, p2);
   }
 }
 
@@ -114,8 +114,8 @@ function handleGameOver(
   console.log("handleGameOver function call");
 
   const gameOverMessage = JSON.stringify({
-    type: "close",
-    message: "Game terminated",
+    type: "gameOver",
+    message: "Game over: Terminating the game",
   });
 
   p1.ws.send(gameOverMessage);
@@ -125,4 +125,33 @@ function handleGameOver(
   gameQueue.delete(gameId);
   p1.ws.close();
   p2.ws.close();
+}
+
+function handleTermination(
+  gameId: string,
+  p1: WaitingQueueForRMType,
+  p2: WaitingQueueForRMType
+) {
+  console.log("Termination function call");
+
+  gameQueue.delete(gameId);
+  const parsedJsonMessage = JSON.stringify({
+    type: "unknown",
+    message: "Opponent player connetion lost",
+  });
+
+  if (p1.ws.readyState === WebSocket.OPEN) {
+    p1.ws.send(parsedJsonMessage);
+  } else {
+    p2.ws.send(parsedJsonMessage);
+  }
+
+  if (p1.ws.readyState === WebSocket.OPEN) {
+    p1.ws.close();
+  }
+
+  // Close player 2's connection if it is open
+  if (p2.ws.readyState === WebSocket.OPEN) {
+    p2.ws.close();
+  }
 }

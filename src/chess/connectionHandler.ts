@@ -48,7 +48,6 @@ export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
       ws.send(
         JSON.stringify({
           type: "expiredJoiningLink",
-          message: "connetion request was expired",
         })
       );
       ws.close();
