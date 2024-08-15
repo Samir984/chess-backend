@@ -10,7 +10,7 @@
 
 ### For Friend Mode:
 
-- **A Set data structure is used to manage player connections.** When a player connects in Friend Mode, their data is stored in the Set with a UserId key, and an invitation link is sent. The player shares this link with their friend. When the friend connects, both players are added to the GameQueue, and their information is removed from the Set.
+- **A Set data structure is used to manage player connections.** When a player connects in Friend Mode, their data is stored in the Set with a UserId key, and an invitation link is sent. The player shares this link with their friend. When the friend connects, both players are added to the GameQueue, and their information is delete from the Set.
 
 <br>
 
