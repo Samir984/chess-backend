@@ -13,11 +13,12 @@ import { addUnderscores, urlShortning } from "../utils/helper";
 export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
   const reqUrl = req.url ? url.parse(req.url, true) : { query: {} as any };
   const { userId, name, image, mode, inviterId } = reqUrl.query;
-
+  const side = waitingQueueForRM.length % 2 === 0 ? "W" : "B";
+  
   if (userId && mode === "R") {
     waitingQueueForRM.push({
       userId: userId as string,
-      side: waitingQueueForRM.length % 2 === 0 ? "W" : "B",
+      side: side,
       ws,
       createdAt: new Date(),
       opponentDetail: { name: name as string, image: image as string },

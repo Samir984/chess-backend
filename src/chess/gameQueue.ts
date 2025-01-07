@@ -10,13 +10,21 @@ export let queueInterval: NodeJS.Timeout;
 export let queueWorkerRunning: boolean;
 
 export const tryMatchPlayer = (type: "knock" | "knock-knock") => {
-  console.log("Trying to match player");
+  console.log(`Trying to match player: length -> ${waitingQueueForRM}`);
 
   if (waitingQueueForRM.length >= 2) {
     const player1 = waitingQueueForRM.shift()!;
-    const player2 = waitingQueueForRM.shift()!;
+    const player2Index = waitingQueueForRM.findIndex(
+      (ele) => player1.side !== ele.side
+    );
+    if (player2Index === -1) return;
+
+    const player2 = waitingQueueForRM.splice(player2Index, 1)[0];
+    console.log(player2, "\n\n");
+
     //prevention check : sometime waitingQueue make have stale value which connetion is not present in high traffic
     if (player1.ws.readyState !== player2.ws.readyState) return;
+
     startGame(player1, player2);
   } else if (type === "knock") {
     // Removing player after timeout
