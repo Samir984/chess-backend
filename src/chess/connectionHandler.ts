@@ -21,7 +21,7 @@ export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
       side: side,
       ws,
       createdAt: new Date(),
-      opponentDetail: { name: name as string, image: image as string },
+      playerInfo: { name: name as string, image: image as string },
     });
 
     if (waitingQueueForRM.length === 1 && !queueWorkerRunning) {
@@ -33,7 +33,7 @@ export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
       side: "W",
       ws,
       createdAt: new Date(),
-      opponentDetail: { name: name as string, image: image as string },
+      playerInfo: { name: name as string, image: image as string },
     });
     ws.send(
       JSON.stringify({
@@ -61,7 +61,7 @@ export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
         side: "B",
         ws,
         createdAt: new Date(),
-        opponentDetail: { name: name as string, image: image as string },
+        playerInfo: { name: name as string, image: image as string },
       };
       waitingQueueForFM.delete(inviterId);
       startGame(inviter, invitee);

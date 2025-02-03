@@ -9,8 +9,7 @@ export const setupWebSocketServer = (wss: WebSocketServer) => {
     console.log(waitingQueueForRM.length, "length");
     if (waitingQueueForRM.length === 1000) {
       const closeMessage =
-        "Connection rejected due to high traffic. Please try later";
-
+        "Connection rejected due to high traffic. Please try later"; 
       ws.close(4000, closeMessage);
       console.log("Connection rejected: Waiting queue is full.");
       return;

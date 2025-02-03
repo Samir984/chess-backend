@@ -102,7 +102,7 @@ export const startGame = (
       type: "joined",
       gameId,
       side: p1.side,
-      opponent: p2.opponentDetail,
+      opponent: p2.playerInfo,
     })
   );
   p2.ws.send(
@@ -110,7 +110,7 @@ export const startGame = (
       type: "joined",
       gameId,
       side: p2.side,
-      opponent: p1.opponentDetail,
+      opponent: p1.playerInfo,
     })
   );
 };

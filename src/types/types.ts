@@ -6,7 +6,7 @@ export type WaitingQueueForRMType = {
   ws: WebSocket;
   createdAt: Date;
   side: string;
-  opponentDetail: {
+  playerInfo: {
     name: string;
     image: string;
   };
