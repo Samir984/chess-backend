@@ -1,7 +1,7 @@
 // src/gameQueue.ts
 import { v4 as uuidv4 } from "uuid";
 import { GameQueueType, WaitingQueueForRMType } from "../types/types";
-import { RegisterMatchInterface, RegisterMatch } from "../services/game";
+import { RegisterMatchInterface, RegisterMatch } from "../services/match";
 
 export const waitingQueueForRM: WaitingQueueForRMType[] = [];
 export const gameQueue = new Map<string, GameQueueType>();

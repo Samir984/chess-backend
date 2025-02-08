@@ -9,14 +9,6 @@ export interface RegisterMatchInterface {
   bet_amount: number;
 }
 
-// game_id:str
-// quitter_player:Optional[str]
-// winner_player:Optional[str]
-// unexpected_leaver_player:Optional[str]
-// is_quit:Optional[bool]
-// is_completed:Optional[bool]
-// is_draw:Optional[bool]
-// is_timeout:Optional[bool]
 
 
 export interface UpdateMatchInterface {
