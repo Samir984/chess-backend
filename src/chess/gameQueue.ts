@@ -1,6 +1,7 @@
 // src/gameQueue.ts
 import { v4 as uuidv4 } from "uuid";
 import { GameQueueType, WaitingQueueForRMType } from "../types/types";
+import { RegisterMatchInterface, RegisterMatch } from "../services/game";
 
 export const waitingQueueForRM: WaitingQueueForRMType[] = [];
 export const gameQueue = new Map<string, GameQueueType>();
@@ -85,7 +86,7 @@ export function wakeTheQueueManipulator() {
   }, 5000);
 }
 
-export const startGame = (
+export const startGame = async (
   p1: WaitingQueueForRMType,
   p2: WaitingQueueForRMType
 ) => {
@@ -113,4 +114,14 @@ export const startGame = (
       opponent: p1.playerInfo,
     })
   );
+
+  const data: RegisterMatchInterface = {
+    game_id: gameId,
+    player_white: p1.side === "W" ? p1.userId : p2.userId,
+    player_black: p1.side === "B" ? p1.userId : p2.userId,
+    is_bet: false,
+    bet_amount: 0.0,
+  };
+
+  await RegisterMatch(data);
 };
