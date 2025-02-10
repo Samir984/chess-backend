@@ -76,7 +76,7 @@ function communicatedThen(clients: GameQueueType, data: any, gameId: string) {
 }
 
 // Handle player quitting
-function handleQuit(clients: GameQueueType, data: any, gameId: string) {
+async function handleQuit(clients: GameQueueType, data: any, gameId: string) {
   const { p1, p2 } = clients;
   const quitter = data.quitter;
 
@@ -86,12 +86,26 @@ function handleQuit(clients: GameQueueType, data: any, gameId: string) {
     message: "Your opponent quit the game",
   });
 
+  let payload: UpdateMatchInterface = {
+    game_id: gameId,
+  };
   if (p1.side === quitter) {
     p2.ws.send(quitMessage);
+    payload = {
+      ...payload,
+      is_quit: true,
+      quitter_player: p1.userId,
+    };
   } else {
     p1.ws.send(quitMessage);
+    payload = {
+      ...payload,
+      is_quit: true,
+      quitter_player: p2.userId,
+    };
   }
 
+  await UpdateMatch(payload);
   // Clean up
   gameQueue.delete(gameId);
   p1.ws.close();
