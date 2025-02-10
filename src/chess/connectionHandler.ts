@@ -9,6 +9,7 @@ import {
 } from "./gameQueue";
 import { WebSocket } from "ws";
 import { addUnderscores, urlShortning } from "../utils/helper";
+import { WaitingQueueForRMType } from "../types/types";
 
 export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
   const reqUrl = req.url ? url.parse(req.url, true) : { query: {} as any };
@@ -56,7 +57,7 @@ export function connetionHandler(req: IncomingMessage, ws: WebSocket) {
       ws.close();
       return;
     } else {
-      const invitee = {
+      const invitee:WaitingQueueForRMType= {
         userId: userId as string,
         side: "B",
         ws,

@@ -1,6 +1,7 @@
 import WebSocket from "ws";
 import { gameQueue, waitingQueueForFM, waitingQueueForRM } from "./gameQueue";
 import { GameQueueType, WaitingQueueForRMType } from "../types/types";
+import { UpdateMatch, UpdateMatchInterface } from "../services/match";
 
 export function messageHandler(message: WebSocket.RawData) {
   const messageString = JSON.parse(message.toString());
@@ -12,18 +13,6 @@ export function messageHandler(message: WebSocket.RawData) {
   switch (type) {
     case "move":
       communicatedThen(clients as GameQueueType, data, gameId);
-      break;
-
-    case "gameOver":
-      setTimeout(
-        () =>
-          handleGameOver(
-            gameId,
-            clients?.p1 as WaitingQueueForRMType,
-            clients?.p2 as WaitingQueueForRMType
-          ),
-        3000
-      );
       break;
 
     case "closeSocketBeforeJoin":
@@ -70,12 +59,16 @@ function communicatedThen(clients: GameQueueType, data: any, gameId: string) {
       move: data.move,
     });
 
-    if (p1.side === "W" && data.nextTurn === "W") {
+    if (p1.side === "W" && data.sendTo === "W") {
       console.log("send to W");
       clients.p1.ws.send(parsedJsonMessage);
     } else {
       console.log("send to B");
       clients.p2.ws.send(parsedJsonMessage);
+    }
+
+    if (data.status === "isGameOver" || data.status === "isDraw") {
+      handleGameOver(clients, data, gameId);
     }
   } else {
     handleTermination(gameId, p1, p2);
@@ -106,21 +99,36 @@ function handleQuit(clients: GameQueueType, data: any, gameId: string) {
 }
 
 // Handle game over scenario
-function handleGameOver(
-  gameId: string,
-  p1: WaitingQueueForRMType,
-  p2: WaitingQueueForRMType
+async function handleGameOver(
+  clients: GameQueueType,
+  data: any,
+  gameId: string
 ) {
   console.log("handleGameOver function call");
+  const { p1, p2 } = clients;
 
-  const gameOverMessage = JSON.stringify({
-    type: "gameOver",
-    message: "Game over: Terminating the game",
-  });
+  let payload: UpdateMatchInterface = {
+    game_id: gameId,
+  };
 
-  p1.ws.send(gameOverMessage);
-  p2.ws.send(gameOverMessage);
+  if (data.status === "isGameOver") {
+    console.log(data.status);
+    payload = {
+      ...payload,
+      is_completed: true,
+      winner_player: p1.side === data.sendTo ? p2.userId : p1.userId,
+    };
+  } else if (data.status === "isDraw") {
+    console.log(data.status, "payload");
+    payload = {
+      ...payload,
+      is_completed: true,
+      is_draw: true,
+    };
+  }
+  console.log(payload);
 
+  await UpdateMatch(payload);
   // Clean up
   gameQueue.delete(gameId);
   p1.ws.close();

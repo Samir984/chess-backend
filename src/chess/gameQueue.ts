@@ -115,7 +115,7 @@ export const startGame = async (
     })
   );
 
-  const data: RegisterMatchInterface = {
+  const payload: RegisterMatchInterface = {
     game_id: gameId,
     player_white: p1.side === "W" ? p1.userId : p2.userId,
     player_black: p1.side === "B" ? p1.userId : p2.userId,
@@ -123,5 +123,5 @@ export const startGame = async (
     bet_amount: 0.0,
   };
 
-  await RegisterMatch(data);
+  await RegisterMatch(payload);
 };

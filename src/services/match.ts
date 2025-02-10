@@ -9,22 +9,20 @@ export interface RegisterMatchInterface {
   bet_amount: number;
 }
 
-
-
 export interface UpdateMatchInterface {
-  game_id:string
-  winner_player?:string
-  quitter_player?:string
-  unexpected_leaver_player?:string
-  is_quit?:boolean
-  is_completed?:boolean
-  is_draw?:boolean
-  is_timeout?:boolean
+  game_id: string;
+  winner_player?: string;
+  quitter_player?: string;
+  unexpected_leaver_player?: string;
+  is_quit?: boolean;
+  is_completed?: boolean;
+  is_draw?: boolean;
+  is_timeout?: boolean;
 }
 
-export const RegisterMatch = async (data: RegisterMatchInterface) => {
+export const RegisterMatch = async (payload: RegisterMatchInterface) => {
   try {
-    const response = await axios.post(`${BASE_URL}api/matches/`, data, {
+    const response = await axios.post(`${BASE_URL}api/matches/`, payload, {
       headers: {
         Authorization: `Bearer ${process.env.MANAGER_AUTH_TOKEN}`,
       },
@@ -36,10 +34,9 @@ export const RegisterMatch = async (data: RegisterMatchInterface) => {
   }
 };
 
-
-export const UpdateMatch = async (data: RegisterMatchInterface) => {
+export const UpdateMatch = async (payload: UpdateMatchInterface) => {
   try {
-    const response = await axios.patch(`${BASE_URL}api/matches/`, data, {
+    const response = await axios.patch(`${BASE_URL}api/matches/`, payload, {
       headers: {
         Authorization: `Bearer ${process.env.MANAGER_AUTH_TOKEN}`,
       },
@@ -47,7 +44,6 @@ export const UpdateMatch = async (data: RegisterMatchInterface) => {
     console.log("Response:", JSON.stringify(response.data)); // Log the response data
     return response.data;
   } catch (error) {
-    console.error("Error making POST request:", error);
+    console.error("Error making POST request:", JSON.stringify(error));
   }
 };
-
