@@ -2,6 +2,7 @@ import WebSocket from "ws";
 import { gameQueue, waitingQueueForFM, waitingQueueForRM } from "./gameQueue";
 import { GameQueueType, WaitingQueueForRMType } from "../types/types";
 import { UpdateMatch, UpdateMatchInterface } from "../services/match";
+import e from "express";
 
 export function messageHandler(message: WebSocket.RawData) {
   const messageString = JSON.parse(message.toString());
@@ -17,12 +18,38 @@ export function messageHandler(message: WebSocket.RawData) {
 
     case "closeSocketBeforeJoin":
       handleCloseSocketBeforeJoin(data);
+      break;
 
+    // this check will hit by client if any player don't respond for 30 second
+    case "checkOpponentPlayerStatus":
+      handelCheckOpponentPlayerStatus(clients as GameQueueType, data, gameId);
       break;
 
     case "quit":
       handleQuit(clients as GameQueueType, data, gameId);
       break;
+  }
+}
+
+function handelCheckOpponentPlayerStatus(
+  clients: GameQueueType,
+  data: any,
+  gameId: string
+) {
+  console.log("handelCheckOpponentPlayerStatus function call");
+  const { p1, p2 } = clients;
+
+  const opponentSideTOCheck = data.opponentSide;
+  const parsedJsonMessage = JSON.stringify({
+    type: "opponentPlayerConnectionLost",
+    message: "Opponent player connetion lost",
+  });
+  if (p1.ws.readyState === WebSocket.CLOSED) {
+    handleTermination(gameId, p1, p2, "opponentPlayerConnectionLost");
+  } else if (p2.ws.readyState === WebSocket.CLOSED) {
+    handleTermination(gameId, p1, p2, "opponentPlayerConnectionLost");
+  } else {
+    console.log("all fine");
   }
 }
 
@@ -152,13 +179,14 @@ async function handleGameOver(
 function handleTermination(
   gameId: string,
   p1: WaitingQueueForRMType,
-  p2: WaitingQueueForRMType
+  p2: WaitingQueueForRMType,
+  terminationLabel?: string
 ) {
   console.log("Termination function call");
 
   gameQueue.delete(gameId);
   const parsedJsonMessage = JSON.stringify({
-    type: "unknown",
+    type: terminationLabel || "unknown",
     message: "Opponent player connetion lost",
   });
 
